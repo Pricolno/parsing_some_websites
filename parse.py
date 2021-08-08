@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import csv
 
 URL = 'https://auto.ria.com/newauto/marka-opel/'
 HEADERS = {
@@ -7,7 +8,7 @@ HEADERS = {
     'accept': '*/*'
 }
 HOST = 'https://auto.ria.com'
-
+FILE = 'cars.csv'
 
 def get_html(url, params=None):
     r = requests.get(url, headers=HEADERS, params=params)
@@ -42,6 +43,14 @@ def get_content(html):
     return cars
 
 
+def save_file(items, path):
+    with open(path, 'w', newline='') as file:
+        writer = csv.writer(file, delimiter=';')
+        writer.writerow(['Марка', 'Ссылка', 'Цена в $', 'Город'])
+        for item in items:
+            writer.writerow([item['title'], item['link'], item['usd_price'], item['city']])
+
+
 def parse():
     html = get_html(URL)
     if html.status_code == 200:
@@ -51,6 +60,7 @@ def parse():
             print(f'Парсинг страницы {page} из {pages_count}...')
             html = get_html(URL, params={'page': page})
             cars.extend(get_content(html.text))
+        save_file(cars, FILE)
         print(f'Получено {len(cars)} автомобилей')
 
     else:
